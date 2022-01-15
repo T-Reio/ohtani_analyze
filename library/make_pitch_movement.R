@@ -111,6 +111,7 @@ okuyuki <- function(df, FN, LN, playerid, year = NULL, lims = NULL) {
   print(pl2)
   
   ggplot2::ggsave(
-    filename = paste0("output/figre/", LN, "_", FN, year, ".png"), plot = pl2
+    filename = paste0("output/figure/", LN, "_", FN, year, "_okuyuki.png"), plot = pl2,
+    width = 6, height = 4
   )
 }
