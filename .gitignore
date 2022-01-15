@@ -37,3 +37,7 @@ vignettes/*.pdf
 
 # R Environment Variables
 .Renviron
+
+#SQLのパスを記載しているファイル
+
+script/get_playByPlay.R
