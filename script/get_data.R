@@ -5,7 +5,7 @@ library(broom)
 conn <- DBI::dbConnect(MariaDB(), host = 'localhost', dbname = 'abdwr', port = 3306,
                        user = 'root', password = 'ENPP7vW52Svt')
 
-class(conn)
+#class(conn)
 
 #------ playByPlay -----
 
@@ -18,8 +18,8 @@ pbp <- DBI::dbGetQuery(conn, query)
 #------ Gamelogs ------
 
 query <- "
-SELECT * FROM 
-WHERE (SUBSTRING(GAME_ID, 4, 4) IN (2018, 2019, 2020, 2021))
+SELECT * FROM gamelogs
+WHERE (DATE > 20180000)
 "
 gamelogs <- DBI::dbGetQuery(conn, query)
 

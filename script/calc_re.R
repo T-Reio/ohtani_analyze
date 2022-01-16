@@ -1,6 +1,15 @@
 library(tidyverse)
 
 pbp %>%
+  mutate(
+    GAME_YEAR = as.numeric(str_sub(GAME_ID, 4, 7)),
+    DOUBLEHEADER = if_else(str_sub(GAME_ID, 12, 12) != '0', 1, 0),
+    TIEBREAKER = if_else(
+      (GAME_YEAR >= 2020) & ((INN_CT >= 10) | (DOUBLEHEADER == 1 & INN_CT >= 8)), 1, 0
+    )
+  ) -> pbp
+
+pbp %>%
   dplyr::mutate(
     RUNS = AWAY_SCORE_CT + HOME_SCORE_CT,
     HALF.INNING = paste(GAME_ID, INN_CT, BAT_HOME_ID),
@@ -10,12 +19,12 @@ pbp %>%
   ) -> pbp
 
 pbp %>%
-  dplyr::group_by(HALF.INNING) %>%
-  dplyr::summarise(
+  group_by(HALF.INNING) %>%
+  summarise(
     Outs.Inning = sum(EVENT_OUTS_CT),
     Runs.Inning = sum(RUNS.SCORED),
     Runs.Start = dplyr::first(RUNS),
-    MAX.RUNS = Runs.Inning + Runs.Start #そのイニング終了時の合計得点数
+    MAX.RUNS = Runs.Inning + Runs.Start, #そのイニング終了時の合計得点数
   ) -> half_innings
 
 pbp %>%
@@ -49,8 +58,8 @@ pbp %>%
   dplyr::filter((STATE != NEW.STATE) | (RUNS.SCORED > 0)) -> pbp_changed
 
 pbp_changed %>%
-  dplyr::filter(Outs.Inning == 3) %>%
-  filter(INN_CT >= 10) -> pbpC
+  filter(Outs.Inning == 3) %>%
+  filter(TIEBREAKER == 0) -> pbpC
 
 pbpC %>%
   dplyr::group_by(STATE) %>%
@@ -123,8 +132,8 @@ play_run_value <- pbpb %>%
   )
 
 #setwd('C:/Users/easyu/ballgame_discrimination')
-#write_rds(play_run_value, 'input/master_files/plays_runvalue_1519.rds')
-#write_rds(value_long, 'input/master_files/RE24_1519.rds')
+#write_rds(play_run_value, 'output/play_values_1821.rds')
+#write_rds(value_long, 'output/RE24_1821.rds')
 
 #------Count---------
 
@@ -205,19 +214,24 @@ counts <- expand.grid(balls = as.numeric(0:3), strikes = as.numeric(0:2),
   )
 counts
 
+k_value <- play_run_value %>% filter(events == 'strikeout') %>% pull(mean_run_value)
+bb_value <- play_run_value %>% filter(events == 'walk') %>% pull(mean_run_value)
+run_value_by_count
 counts %>%
   left_join(., run_value_by_count, by = c('balls', 'strikes')) %>%
   rename(rv_before = value) %>%
   left_join(., run_value_by_count, by = c('balls_after' = 'balls', 'strikes_after' = 'strikes')) %>%
   select(1, 2, 3, 7, rv_after = 9) %>%
   mutate(
-    rv_after = if_else(is.na(rv_after), if_else(call == 'if_strike', -.266, .310), rv_after),
+    rv_after = if_else(is.na(rv_after), if_else(call == 'if_strike', k_value, bb_value), rv_after),
     runs_value = rv_after - rv_before
   ) -> call_values
 
 call_values
 
 call_values %>%
-  select(-c(4, 5)) %>%
+  select(-c(5)) %>%
   pivot_wider(., names_from = call, values_from = runs_value) %>%
   mutate(Count = paste0(balls, '-', strikes)) -> call_values_saved
+call_values_saved
+#write_rds(call_values_saved, 'output/counts_run_value_1821.rds')
