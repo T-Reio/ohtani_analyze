@@ -2,6 +2,9 @@ library(tidyverse)
 library(baseballr)
 source('library/event_lists.R')
 
+#月別xwOBA
+
+
 #----- Zone ----------
 
 names <- chadwick %>%
@@ -40,4 +43,4 @@ called_pitch %>%
 
 called_ranking
 
-write_excel_csv()
+write_excel_csv(called_ranking, 'output/table/pitchcall_runs_ranking_min500.csv')

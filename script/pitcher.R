@@ -277,3 +277,5 @@ called_pitch %>%
   mutate(type1_ratio = type1 / total * 100) %>%
   arrange(-type1_ratio) %>%
   mutate(rank = row_number()) -> called_ranking_pitcher
+
+write_excel_csv(called_ranking_pitcher, 'output/table/pitcher_pitchcall_runs_ranking_min500.csv')
