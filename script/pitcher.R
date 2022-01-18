@@ -119,13 +119,13 @@ pitch2021 %>%
     rank = -mean(delta_run_exp, na.rm = T) * 100,
     rank_tj = -mean(delta_run_exp_tj, na.rm = T) * 100,
     tot = n(),
-    velo = formatC(mean(release_speed, na.rm = T) * 1.61, digits = 1, format = 'f'),
-    pfx_x = formatC(mean(pfx_x_mirror, na.rm = T) * 30.48, digits = 1, format = 'f'),
-    pfx_z = formatC(mean(pfx_z, na.rm = T) * 30.48, digits = 1, format = 'f'),
-    pv = formatC(-sum(delta_run_exp, na.rm = T), digits = 1, format = 'f'),
-    pvC = formatC(-mean(delta_run_exp, na.rm = T) * 100, digits = 2, format = 'f'),
-    pv_tj = formatC(sum(-delta_run_exp_tj, na.rm = T), digits = 1, format = 'f'),
-    pvC_tj = formatC(mean(-delta_run_exp_tj, na.rm = T) * 100, digits = 2, format = 'f'),
+    velo = round(mean(release_speed, na.rm = T) * 1.61, digits = 1),
+    pfx_x = round(mean(pfx_x_mirror, na.rm = T) * 30.48, digits = 1),
+    pfx_z = round(mean(pfx_z, na.rm = T) * 30.48, digits = 1),
+    pv = round(-sum(delta_run_exp, na.rm = T), digits = 1),
+    pvC = round(-mean(delta_run_exp, na.rm = T) * 100, digits = 2),
+    pv_tj = round(sum(-delta_run_exp_tj, na.rm = T), digits = 1),
+    pvC_tj = round(mean(-delta_run_exp_tj, na.rm = T) * 100, digits = 2),
   ) %>%
   filter(tot >= 200) %>%
   arrange(-rank) %>%

@@ -21,7 +21,9 @@ ev <- c(
 
 PAresult <- ev[c(1, 2, 6:16, 24:34)]
 
-AtBat <- PAresult[c(3:10, 12, 13, 18:23)]
+AtBat <- PAresult[c(3:10, 12, 13, 18:22)]
+
+BABIP_den <- PAresult[c(3:10, 13, 18, 21, 22)]
 
 baseHit <- AtBat[c(1, 9, 11, 14)]
 
