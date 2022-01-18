@@ -8,6 +8,16 @@ source('library/colour_palette.R')
 fg_stats <- baseballr::fg_batter_leaders(2021, 2021)
 
 fg_stats %>%
+  select(Name, PA, H, HR, R, RBI, BB, IBB, SO, SB,
+         AVG, OBP, SLG, OPS, ISO, BABIP, wOBA, wRAA) %>%
+  arrange(-wRAA)-> league_leaderboard
+
+league_leaderboard %>%
+  arrange(-BB)
+
+#write_excel_csv(league_leaderboard, 'output/table/leaderboard.csv')
+
+fg_stats %>%
   select(playerid, Team, IBB) -> fg_selected
 
 #月別xwOBA
@@ -61,6 +71,8 @@ pitch2021 %>%
   )%>%
   arrange(game_pk,-at_bat_number,-pitch_number) -> pitch2021
 
+source('script/add_playvalues.R')
+
 #----- League ----------
 
 pitch2021 %>%
@@ -73,11 +85,12 @@ pitch2021 %>%
     Zone = round(sum(zone %in% 1:9)/n() * 100, digits = 1),
     CStr = round(sum(description %in% calledstr) / n() * 100, digits = 1),
     Swing = round(sum(description %in% swing) / n() * 100, digits = 1),
+    Chase = round(sum(description[zone %in% 11:14] %in% swing) / sum(zone %in% 11:14) * 100, digits = 1),
     Contact = round(sum(description %in% contact, na.rm = T) / 
                         sum(description %in% swing, na.rm = T) * 100, digits = 1),
-    foul_pct = round(sum(description %in% c('foul', 'foul_pitchout', 'foul_bunt')) / 
-                         sum(description %in% contact, na.rm = T) * 100, digits = 1),
-    exit_velo = round(mean(launch_speed[type == 'X'], na.rm = T), digits = 1),
+    #foul_pct = round(sum(description %in% c('foul', 'foul_pitchout', 'foul_bunt')) / 
+     #                    sum(description %in% contact, na.rm = T) * 100, digits = 1),
+    exit_velo = round(mean(launch_speed_km[type == 'X'], na.rm = T), digits = 1),
     launch_angle = round(mean(launch_angle[type == 'X'], na.rm = T), digits = 1),
     Pull = round(sum(bb_dim_type[type == 'X'] == "Pull", na.rm = T) /
                    sum(type == 'X', na.rm = T) * 100, digits = 1),
@@ -98,9 +111,15 @@ pitch2021 %>%
 
 league_individual %>%
   right_join(., fg_selected, by = c('key_fangraphs' = 'playerid')) %>%
-  arrange(-wOBA) %>%
+  arrange(-xwOBA) %>%
   select(-c(batter, key_fangraphs, pitches)) %>%
   select(name, Team, everything()) -> league
+
+league %>%
+  arrange(-Hard) %>%
+  mutate(num = row_number()) %>%
+  select(num, everything()) %>%
+  filter(name == 'Ohtani, Shohei')
 
 #write_excel_csv(league, 'output/table/bat_individual_qual.csv')
 
@@ -120,12 +139,15 @@ ohtani %>%
     Zone = round(sum(zone %in% 1:9)/n() * 100, digits = 1),
     CStr = round(sum(description %in% calledstr) / n() * 100, digits = 1),
     Swing = round(sum(description %in% swing) / n() * 100, digits = 1),
+    Chase = round(sum(description[zone %in% 11:14] %in% swing) / sum(zone %in% 11:14) * 100, digits = 1),
     Contact = round(sum(description %in% contact, na.rm = T) / 
                         sum(description %in% swing, na.rm = T) * 100, digits = 1),
     foul_pct = round(sum(description %in% c('foul', 'foul_pitchout', 'foul_bunt')) / 
                          sum(description %in% contact, na.rm = T) * 100, digits = 1),
     exit_velo = round(mean(launch_speed[type == 'X'], na.rm = T), digits = 1),
     launch_angle = round(mean(launch_angle[type == 'X'], na.rm = T), digits = 1),
+    Pull = round(sum(bb_dim_type[type == 'X'] == "Pull", na.rm = T) /
+                   sum(type == 'X', na.rm = T) * 100, digits = 1),
     Hard = round(sum(launch_speed >= 95, na.rm = T) /
                      sum(type == 'X', na.rm = T) * 100, digits = 1),
     BABIP = round(sum(babip_value, na.rm = T) / sum(BABIP_denom, na.rm = T), digits = 3),
@@ -152,12 +174,15 @@ ohtani %>%
     Zone = round(sum(zone %in% 1:9)/n() * 100, digits = 1),
     CStr = round(sum(description %in% calledstr) / n() * 100, digits = 1),
     Swing = round(sum(description %in% swing) / n() * 100, digits = 1),
+    Chase = round(sum(description[zone %in% 11:14] %in% swing) / sum(zone %in% 11:14) * 100, digits = 1),
     Contact = round(sum(description %in% contact, na.rm = T) / 
                         sum(description %in% swing, na.rm = T) * 100, digits = 1),
     foul_pct = round(sum(description %in% c('foul', 'foul_pitchout', 'foul_bunt')) / 
                          sum(description %in% contact, na.rm = T) * 100, digits = 1),
-    exit_velo = round(mean(launch_speed[type == 'X'], na.rm = T), digits = 1),
+    exit_velo = round(mean(launch_speed_km[type == 'X'], na.rm = T), digits = 1),
     launch_angle = round(mean(launch_angle[type == 'X'], na.rm = T), digits = 1),
+    Pull = round(sum(bb_dim_type[type == 'X'] == "Pull", na.rm = T) /
+                   sum(type == 'X', na.rm = T) * 100, digits = 1),
     Hard = round(sum(launch_speed >= 95, na.rm = T) /
                      sum(type == 'X', na.rm = T) * 100, digits = 1),
     BABIP = round(sum(babip_value, na.rm = T) / sum(BABIP_denom, na.rm = T), digits = 3),
@@ -184,12 +209,15 @@ ohtani %>%
     Zone = round(sum(zone %in% 1:9)/n() * 100, digits = 1),
     CStr = round(sum(description %in% calledstr) / n() * 100, digits = 1),
     Swing = round(sum(description %in% swing) / n() * 100, digits = 1),
+    Chase = round(sum(description[zone %in% 11:14] %in% swing) / sum(zone %in% 11:14) * 100, digits = 1),
     Contact = round(sum(description %in% contact, na.rm = T) / 
                       sum(description %in% swing, na.rm = T) * 100, digits = 1),
     foul_pct = round(sum(description %in% c('foul', 'foul_pitchout', 'foul_bunt')) / 
                        sum(description %in% contact, na.rm = T) * 100, digits = 1),
-    exit_velo = round(mean(launch_speed[type == 'X'], na.rm = T), digits = 1),
+    exit_velo = round(mean(launch_speed_km[type == 'X'], na.rm = T), digits = 1),
     launch_angle = round(mean(launch_angle[type == 'X'], na.rm = T), digits = 1),
+    Pull = round(sum(bb_dim_type[type == 'X'] == "Pull", na.rm = T) /
+                   sum(type == 'X', na.rm = T) * 100, digits = 1),
     Hard = round(sum(launch_speed >= 95, na.rm = T) /
                    sum(type == 'X', na.rm = T) * 100, digits = 1),
     BABIP = round(sum(babip_value, na.rm = T) / sum(BABIP_denom, na.rm = T), digits = 3),
@@ -216,12 +244,15 @@ ohtani %>%
     Zone = round(sum(zone %in% 1:9)/n() * 100, digits = 1),
     CStr = round(sum(description %in% calledstr) / n() * 100, digits = 1),
     Swing = round(sum(description %in% swing) / n() * 100, digits = 1),
+    Chase = round(sum(description[zone %in% 11:14] %in% swing) / sum(zone %in% 11:14) * 100, digits = 1),
     Contact = round(sum(description %in% contact, na.rm = T) / 
                         sum(description %in% swing, na.rm = T) * 100, digits = 1),
     foul_pct = round(sum(description %in% c('foul', 'foul_pitchout', 'foul_bunt')) / 
                          sum(description %in% contact, na.rm = T) * 100, digits = 1),
-    exit_velo = round(mean(launch_speed[type == 'X'], na.rm = T), digits = 1),
+    exit_velo = round(mean(launch_speed_km[type == 'X'], na.rm = T), digits = 1),
     launch_angle = round(mean(launch_angle[type == 'X'], na.rm = T), digits = 1),
+    Pull = round(sum(bb_dim_type[type == 'X'] == "Pull", na.rm = T) /
+                   sum(type == 'X', na.rm = T) * 100, digits = 1),
     Hard = round(sum(launch_speed >= 95, na.rm = T) /
                      sum(type == 'X', na.rm = T) * 100, digits = 1),
     BABIP = round(sum(babip_value, na.rm = T) / sum(BABIP_denom, na.rm = T), digits = 3),
@@ -252,12 +283,15 @@ ohtani %>%
     Zone = round(sum(zone %in% 1:9)/n() * 100, digits = 1),
     CStr = round(sum(description %in% calledstr) / n() * 100, digits = 1),
     Swing = round(sum(description %in% swing) / n() * 100, digits = 1),
+    Chase = round(sum(description[zone %in% 11:14] %in% swing) / sum(zone %in% 11:14) * 100, digits = 1),
     Contact = round(sum(description %in% contact, na.rm = T) / 
                       sum(description %in% swing, na.rm = T) * 100, digits = 1),
     foul_pct = round(sum(description %in% c('foul', 'foul_pitchout', 'foul_bunt')) / 
                        sum(description %in% contact, na.rm = T) * 100, digits = 1),
-    exit_velo = round(mean(launch_speed[type == 'X'], na.rm = T), digits = 1),
+    exit_velo = round(mean(launch_speed_km[type == 'X'], na.rm = T), digits = 1),
     launch_angle = round(mean(launch_angle[type == 'X'], na.rm = T), digits = 1),
+    Pull = round(sum(bb_dim_type[type == 'X'] == "Pull", na.rm = T) /
+                   sum(type == 'X', na.rm = T) * 100, digits = 1),
     Hard = round(sum(launch_speed >= 95, na.rm = T) /
                    sum(type == 'X', na.rm = T) * 100, digits = 1),
     BABIP = round(sum(babip_value, na.rm = T) / sum(BABIP_denom, na.rm = T), digits = 3),
