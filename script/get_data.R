@@ -32,6 +32,8 @@ WHERE (SUBSTRING(game_date, 1, 4) IN (2021))
 
 pitch2021 <- DBI::dbGetQuery(conn, query)
 
+#write_rds(pitch2021, 'C:/Users/easyu/Dropbox/ballgame_economics/traking2021.rds')
+
 DBI::dbDisconnect(conn)
 
 #------ chadwick ---------------
