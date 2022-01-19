@@ -12,8 +12,8 @@ fg_stats %>%
          AVG, OBP, SLG, OPS, ISO, BABIP, wOBA, wRAA) %>%
   arrange(-wRAA)-> league_leaderboard
 
-league_leaderboard %>%
-  arrange(-BB)
+#league_leaderboard %>%
+#  arrange(-BB)
 
 #write_excel_csv(league_leaderboard, 'output/table/leaderboard.csv')
 
@@ -313,6 +313,119 @@ ohtani %>%
 
 #write_excel_csv(pitch_type_specified, 'output/table/Ohtani_bat_pitch_type_specified.csv')
 
+#----- zone ----------
+
+ohtani %>%
+  group_by(zone) %>%
+  summarise(
+    pitches = n(),
+    #Fastball_pct = round(mean(pitch_type_forBatter == 'Fastball', na.rm = T) * 100, digits = 2),
+    CStr = round(sum(description %in% calledstr) / n() * 100, digits = 1),
+    Swing = round(sum(description %in% swing) / n() * 100, digits = 1),
+    Contact = round(sum(description %in% contact, na.rm = T) / 
+                      sum(description %in% swing, na.rm = T) * 100, digits = 1),
+    foul_pct = round(sum(description %in% c('foul', 'foul_pitchout', 'foul_bunt')) / 
+                       sum(description %in% contact, na.rm = T) * 100, digits = 1),
+    exit_velo = round(mean(launch_speed_km[type == 'X'], na.rm = T), digits = 1),
+    launch_angle = round(mean(launch_angle[type == 'X'], na.rm = T), digits = 1),
+    Pull = round(sum(bb_dim_type[type == 'X'] == "Pull", na.rm = T) /
+                   sum(type == 'X', na.rm = T) * 100, digits = 1),
+    Hard = round(sum(launch_speed >= 95, na.rm = T) /
+                   sum(type == 'X', na.rm = T) * 100, digits = 1),
+    BABIP = round(sum(babip_value, na.rm = T) / sum(BABIP_denom, na.rm = T), digits = 3),
+    wOBA = round(sum(woba_value, na.rm = T) / sum(woba_denom, na.rm = T), digits = 3),
+    xwOBA = round(sum(xwoba_value, na.rm = T) / sum(woba_denom, na.rm = T), digits = 3),
+    flare = round(sum(launch_speed_angle == 4, na.rm = T) /
+                    sum(!is.na(launch_speed_angle), na.rm = T) * 100, digits = 1),
+    barrel = round(sum(Barrel == 1, na.rm = T) /
+                     sum(!is.na(Barrel), na.rm = T) * 100, digits = 1),
+    barrelperPA = round(sum(Barrel == 1, na.rm = T) /
+                          sum(PA_denom, na.rm = T) * 100, digits = 1),
+    pv = round(sum(delta_run_exp, na.rm = T), digits = 1),
+    pvC = round(mean(delta_run_exp, na.rm = T) * 100, digits = 2),
+    pv_tj = round(sum(delta_run_exp_tj, na.rm = T), digits = 1),
+    pvC_tj = round(mean(delta_run_exp_tj, na.rm = T) * 100, digits = 2),
+    shifted = round(sum(if_fielding_alignment != 'Standard', na.rm = T) / n() * 100, digits = 1),
+  ) %>%
+  arrange(zone) -> pitch_zone
+
+#write_excel_csv(pitch_zone_swing, 'output/table/Ohtani_bat_pitch_zoneswing.csv')
+
+pitch2021 %>%
+  filter(stand == 'L') %>%
+  group_by(zone) %>%
+  summarise(
+    pitches = n(),
+    #Fastball_pct = round(mean(pitch_type_forBatter == 'Fastball', na.rm = T) * 100, digits = 2),
+    CStr = round(sum(description %in% calledstr) / n() * 100, digits = 1),
+    Swing = round(sum(description %in% swing) / n() * 100, digits = 1),
+    Contact = round(sum(description %in% contact, na.rm = T) / 
+                      sum(description %in% swing, na.rm = T) * 100, digits = 1),
+    foul_pct = round(sum(description %in% c('foul', 'foul_pitchout', 'foul_bunt')) / 
+                       sum(description %in% contact, na.rm = T) * 100, digits = 1),
+    exit_velo = round(mean(launch_speed_km[type == 'X'], na.rm = T), digits = 1),
+    launch_angle = round(mean(launch_angle[type == 'X'], na.rm = T), digits = 1),
+    Pull = round(sum(bb_dim_type[type == 'X'] == "Pull", na.rm = T) /
+                   sum(type == 'X', na.rm = T) * 100, digits = 1),
+    Hard = round(sum(launch_speed >= 95, na.rm = T) /
+                   sum(type == 'X', na.rm = T) * 100, digits = 1),
+    BABIP = round(sum(babip_value, na.rm = T) / sum(BABIP_denom, na.rm = T), digits = 3),
+    wOBA = round(sum(woba_value, na.rm = T) / sum(woba_denom, na.rm = T), digits = 3),
+    xwOBA = round(sum(xwoba_value, na.rm = T) / sum(woba_denom, na.rm = T), digits = 3),
+    flare = round(sum(launch_speed_angle == 4, na.rm = T) /
+                    sum(!is.na(launch_speed_angle), na.rm = T) * 100, digits = 1),
+    barrel = round(sum(Barrel == 1, na.rm = T) /
+                     sum(!is.na(Barrel), na.rm = T) * 100, digits = 1),
+    barrelperPA = round(sum(Barrel == 1, na.rm = T) /
+                          sum(PA_denom, na.rm = T) * 100, digits = 1),
+    pv = round(sum(delta_run_exp, na.rm = T), digits = 1),
+    pvC = round(mean(delta_run_exp, na.rm = T) * 100, digits = 2),
+    pv_tj = round(sum(delta_run_exp_tj, na.rm = T), digits = 1),
+    pvC_tj = round(mean(delta_run_exp_tj, na.rm = T) * 100, digits = 2),
+    shifted = round(sum(if_fielding_alignment != 'Standard', na.rm = T) / n() * 100, digits = 1),
+  ) %>%
+  arrange(zone) -> pitch_zone_league
+  
+
+#----- Swing -------------
+
+ohtani %>%
+  filter(swing_indicator == 1) %>%
+  group_by(zone) %>%
+  summarise(
+    pitches = n(),
+    #Fastball_pct = round(mean(pitch_type_forBatter == 'Fastball', na.rm = T) * 100, digits = 2),
+    CStr = round(sum(description %in% calledstr) / n() * 100, digits = 1),
+    Swing = round(sum(description %in% swing) / n() * 100, digits = 1),
+    Contact = round(sum(description %in% contact, na.rm = T) / 
+                      sum(description %in% swing, na.rm = T) * 100, digits = 1),
+    foul_pct = round(sum(description %in% c('foul', 'foul_pitchout', 'foul_bunt')) / 
+                       sum(description %in% contact, na.rm = T) * 100, digits = 1),
+    exit_velo = round(mean(launch_speed_km[type == 'X'], na.rm = T), digits = 1),
+    launch_angle = round(mean(launch_angle[type == 'X'], na.rm = T), digits = 1),
+    Pull = round(sum(bb_dim_type[type == 'X'] == "Pull", na.rm = T) /
+                   sum(type == 'X', na.rm = T) * 100, digits = 1),
+    Hard = round(sum(launch_speed >= 95, na.rm = T) /
+                   sum(type == 'X', na.rm = T) * 100, digits = 1),
+    BABIP = round(sum(babip_value, na.rm = T) / sum(BABIP_denom, na.rm = T), digits = 3),
+    wOBA = round(sum(woba_value, na.rm = T) / sum(woba_denom, na.rm = T), digits = 3),
+    xwOBA = round(sum(xwoba_value, na.rm = T) / sum(woba_denom, na.rm = T), digits = 3),
+    flare = round(sum(launch_speed_angle == 4, na.rm = T) /
+                    sum(!is.na(launch_speed_angle), na.rm = T) * 100, digits = 1),
+    barrel = round(sum(Barrel == 1, na.rm = T) /
+                     sum(!is.na(Barrel), na.rm = T) * 100, digits = 1),
+    barrelperPA = round(sum(Barrel == 1, na.rm = T) /
+                          sum(PA_denom, na.rm = T) * 100, digits = 1),
+    pv = round(sum(delta_run_exp, na.rm = T), digits = 1),
+    pvC = round(mean(delta_run_exp, na.rm = T) * 100, digits = 2),
+    pv_tj = round(sum(delta_run_exp_tj, na.rm = T), digits = 1),
+    pvC_tj = round(mean(delta_run_exp_tj, na.rm = T) * 100, digits = 2),
+    shifted = round(sum(if_fielding_alignment != 'Standard', na.rm = T) / n() * 100, digits = 1),
+  ) %>%
+  arrange(zone) -> pitch_zone_swing
+
+#write_excel_csv(pitch_zone, 'output/table/Ohtani_bat_pitch_zone.csv')
+
 #----- Exit velo / Launch Angle plot -------
 
 ohtani <- ohtani %>%
@@ -413,7 +526,105 @@ geom_spraytable(data = ohtani %>% filter(type == 'X'),
   facet_wrap(~ if_fielding_alignment) +
   labs(title = 'Shohei Ohtani Spray Chart')
 
+#----- Batted Ball Value --------
+
+library(mgcv)
+
+ohtani %>%
+  filter(swing_indicator == 1) -> ohtani_swung
+
+model <- ohtani_swung %>%
+  gam(formula = delta_run_exp_tj ~ s(plate_x, plate_z),
+      family = 'gaussian',
+      data=.)
+
+swung <- pitch2021 %>%
+  filter(stand == 'L') %>%
+#  filter(Count == '3-1') %>%
+  filter(swing_indicator == 1)
+
+model2 <- swung %>%
+  gam(formula = delta_run_exp ~ s(plate_x, plate_z),
+      family = "gaussian",
+      data=.)
+
+gam.check(model2)
+vis.gam(model2)
+hist(swung$delta_run_exp)
+
+called <- ohtani %>%
+  filter(description %in% c('called_strike', 'ball')) %>% 
+  mutate(strike_indicator = if_else(type == 'S', 1, 0))
+
+model3 <- called %>%
+  gam(strike_indicator ~ s(plate_x, plate_z),
+      family = 'binomial',
+      data = .)
+
+gam.check(model3)
+
 #----- Zone ----------
+
+df_split <- pitch2021 %>%
+  split(list(pull(., stand), pull(., Count)))
+
+called <- df_split %>%
+  map(~filter(., description %in% c("ball", "called_strike")) %>%
+        mutate(
+          Strike = if_else(description == 'called_strike', 1, 0)
+        ))
+
+call_fit <- called %>%
+  map(~ gam(Strike ~ s(plate_x, plate_z),
+            family = 'binomial',
+            data=.))
+
+fit_strike <- function(i, call_fit, df_split){
+  df_split[[i]] %>%
+    mutate(
+      lp = predict(call_fit[[i]], .) %>% c(),
+      prob = exp(lp) / (1 + exp(lp)),
+    )
+}
+
+df_with_cp <- map(1:length(call_fit),
+                  .f = fit_strike, call_fit = call_fit, df_split = df_split)
+
+cf <- bind_rows(df_with_cp) %>%
+  arrange(game_pk,-at_bat_number,-pitch_number)
+
+library(lme4)
+
+cf %>%
+  filter(description %in% c("ball", "called_strike")) %>%
+  glmer(type == 'S' ~ prob + (1 | batter), 
+        data = ., family = 'binomial') -> mod
+
+mod %>%
+  ranef() %>%
+  as_tibble() %>% mutate(grp = as.character(grp)) -> est
+
+pitch2021 %>%
+  group_by(batter, batter_name_last, batter_name_first) %>%
+  summarise(
+    pitches = sum(description %in% c('called_strike', 'ball')),
+  ) %>%
+  ungroup() %>%
+  mutate(batter = as.character(batter)) -> ns
+
+ns %>%
+  left_join(est, by = c('batter' = 'grp')) -> sum
+
+sum %>%
+  transmute(
+    name = paste0(batter_name_last, ', ', batter_name_first),
+    pitches,
+    condval,
+    sum_val = pitches * condval,
+    runs = sum_val * 0.013
+  ) %>%
+  arrange(runs) %>%
+  filter(pitches >= 500) -> res
 
 names <- chadwick %>%
   select(batter_name_last = name_last, batter_name_first = name_first, key_mlbam)
@@ -424,7 +635,10 @@ cf %>%
 called_pitch <- cf %>%
   filter(description %in% c("ball", "called_strike"))
 
-called_pitch %>%
+
+
+cf %>%
+  filter(description %in% c("ball", "called_strike")) %>%
   mutate(
     Strike = if_else(type == 'S', 1, 0),
     Zone = if_else(zone %in% 1:9, 1, 0),
@@ -452,3 +666,41 @@ called_pitch %>%
 called_ranking
 
 write_excel_csv(called_ranking, 'output/table/pitchcall_runs_ranking_min500.csv')
+
+
+#----- Omake ------------
+
+cf %>%
+  filter(description %in% c("ball", "called_strike")) %>%
+  glmer(type == 'S' ~ prob + (1 | fielder_2) + (1 | batter), 
+        data = ., family = 'binomial') -> mod2
+
+mod2 %>%
+  ranef() %>%
+  as_tibble() %>%
+  filter(grpvar == 'fielder_2') %>%
+  mutate(grp = as.character(grp)) -> est_c
+
+pitch2021 %>%
+  group_by(fielder_2) %>%
+  summarise(
+    pitches = sum(description %in% c('called_strike', 'ball')),
+  ) %>%
+  ungroup() %>%
+  mutate(fielder_2 = as.character(fielder_2)) -> ns_c
+
+ns_c %>%
+  left_join(est_c, by = c('fielder_2' = 'grp')) -> sum_c
+
+names_c <- names %>% mutate(key_mlbam = as.character(key_mlbam))
+sum_c %>%
+  left_join(., names_c, by = c('fielder_2' = 'key_mlbam')) %>%
+  transmute(
+    name = paste0(batter_name_last, ', ', batter_name_first),
+    pitches,
+    condval,
+    sum_val = pitches * condval,
+    runs = sum_val * 0.013
+  ) %>%
+  arrange(-runs) %>%
+  filter(pitches >= 500) -> res_2

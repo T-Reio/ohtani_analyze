@@ -13,8 +13,7 @@ make_pitch_movement <- function(FN, LN, playerid, year = NULL, lims = NULL) {
   ) %>%
     select(game_date, game_type, pitch_type, pfx_x, pfx_z, plate_x, plate_z, type,
            description, release_speed, stand, release_spin_rate, pitch_name, zone,
-           events, description, launch_speed, launch_angle, bb_type, woba_value, woba_denom,
-           barrel) %>%
+           events, description, launch_speed, launch_angle, bb_type, woba_value, woba_denom) %>%
     filter(!(pitch_type %in% c("PO", "IN", "null")), !is.na(pitch_type)) %>%
     dplyr::filter(game_type != 'S') %>%
     mutate(

@@ -1,5 +1,20 @@
 library(tidyverse)
+
 source('library/event_lists.R')
+source('library/colour_palette.R')
+source('script/add_playvalues.R')
+
+#------ stats ---------------
+
+fg_stats <- fg_pitch_leaders(2021, 2021, qual = 100)
+
+fg_stats %>%
+  select(Name, ERA, W, L, SV, G, GS, IP, K_pct, SO, BB, K_BB, WHIP, FIP, tERA, WAR) %>%
+  arrange(-tERA) %>%
+  mutate(no = row_number()) %>% 
+  filter(Name == 'Shohei Ohtani')
+
+#write_excel_csv(stats_saved, 'output/table/stas_fg_min100.csv')
 
 #------ Add playername -------
 
@@ -67,7 +82,9 @@ league_average %>% view()
 
 #------- Ohtani Stats ---------
 
-ohtani <- pitch2021 %>% filter(pitcher == 660271)
+ohtani <- pitch2021 %>% 
+  filter(pitcher == 660271) %>%
+  mutate(game_month = month(game_date))
 
 ohtani %>%
   group_by(pitch_name) %>%
@@ -109,6 +126,77 @@ summary %>% view()
 
 write_excel_csv(summary, 'output/table/ohtani2021_summary.csv')
 write_excel_csv(league_average, 'output/table/league2021_summary.csv')
+
+#------- by Month -----------------
+
+ohtani %>%
+  group_by(game_month) %>%
+  summarise(total = n()) -> pitch_bymonth
+
+ohtani %>%
+  left_join(., pitch_bymonth) %>%
+  group_by(pitch_name, game_month) %>%
+  summarise(
+    pitches = n(),
+    ratio = round(n() / first(total) * 100, digits = 1),
+    velo = round(mean(release_speed, na.rm = T) * 1.61, digits = 1),
+    pfx_x = round(mean(pfx_x, na.rm = T) * 30.48, digits = 1),
+    pfx_z = round(mean(pfx_z, na.rm = T) * 30.48, digits = 1),
+    pv = round(-sum(delta_run_exp, na.rm = T), digits = 1),
+    pvC = round(-mean(delta_run_exp, na.rm = T) * 100, digits = 2),
+    pv_tj = round(sum(-delta_run_exp_tj, na.rm = T), digits = 1),
+    pvC_tj = round(mean(-delta_run_exp_tj, na.rm = T) * 100, digits = 2),
+    spinrate = round(mean(release_spin_rate, na.rm = T), digits = 1),
+    Zone = round(sum(zone %in% 1:9, na.rm = T)/n() * 100, digits = 1),
+    SwStr = round(sum(description %in% swst, na.rm = T) / n() * 100, digits = 1),
+    CStr = round(sum(description %in% calledstr, na.rm = T) / n() * 100, digits = 1),
+    Swing = round(sum(description %in% swing, na.rm = T) / n() * 100, digits = 1),
+    Contact = round(sum(description %in% contact) / 
+                        sum(description %in% swing, na.rm = T) * 100, digits = 1),
+    GB = round(sum(bb_type == "ground_ball", na.rm = T) / 
+                   sum(bb_type %in% c('ground_ball', 'line_drive', 'fly_ball', 'popup'), na.rm = T) * 100, digits = 1),
+    LD = round(sum(bb_type == "line_drive", na.rm = T) / 
+                   sum(bb_type %in% c('ground_ball', 'line_drive', 'fly_ball', 'popup'), na.rm = T) * 100, digits = 1),
+    FB = round(sum(bb_type == "fly_ball", na.rm = T) / 
+                   sum(bb_type %in% c('ground_ball', 'line_drive', 'fly_ball', 'popup'), na.rm = T) * 100, digits = 1),
+    PU = round(sum(bb_type == "popup", na.rm = T) / 
+                   sum(bb_type %in% c('ground_ball', 'line_drive', 'fly_ball', 'popup'), na.rm = T) * 100, digits = 1),
+    Hard = round(sum(launch_speed >= 95, na.rm = T) /
+                     sum(!is.na(launch_speed), na.rm = T) * 100, digits = 1),
+    wOBA = round(sum(woba_value, na.rm = T) / sum(woba_denom, na.rm = T), digits = 3),
+    xwOBA = round(sum(xwoba_value, na.rm = T) / sum(woba_denom, na.rm = T), digits = 3),
+  ) %>%
+  arrange(desc(pitch_name), game_month) -> summary_bymonth
+
+ohtani %>%
+  #left_join(., pitch_bymonth) %>%
+  group_by(game_month) %>%
+  summarise(
+    pitches = n(),
+    pv = round(-sum(delta_run_exp, na.rm = T), digits = 1),
+    pvC = round(-mean(delta_run_exp, na.rm = T) * 100, digits = 2),
+  ) %>%
+  arrange(game_month) -> pv_byMonth
+
+names(pitch_colour) %>% intersect(unique(ohtani$pitch_name)) -> pitches
+
+pitch_colour[names(pitch_colour) %in% pitches] -> pitch_colours_temp
+
+ggplot() +
+  geom_bar(data = summary_bymonth, 
+           aes(x = game_month, y = pv, fill = pitch_name), 
+           stat = 'identity', 
+           position = 'stack') +
+  scale_fill_manual(values = pitch_colours_temp) + 
+  theme_bw() +
+  geom_point(data = pv_byMonth, aes(x = game_month, y = pv), colour = 'blue', size = 3) +
+  geom_line(data = pv_byMonth, aes(x = game_month, y = pv), colour = 'blue', size = 1) +
+  geom_hline(yintercept = 0, size = 1) +
+  labs(title = '月別 PitchValueの推移', x = "月", y = "PitchValue", fill = '球種')
+
+ggsave('output/figure/monthly_pv.png', width = 4, height = 4)
+
+#write_excel_csv(summary_bymonth, 'output/table/ohtani_monthly.csv')
 
 #-------pitch value rankings--------
 
@@ -207,6 +295,7 @@ called_pitch %>%
     diff = sum(Strike - prob, na.rm = T),
     type1 = sum(Zone_individual - Strike == 1, na.rm = T),
     type2 = sum(Zone_individual - Strike == -1, na.rm = T),
+    runs = sum(delta_run_exp_tj - expected_run, na.rm = T),
   ) %>%
   filter(total >= 500) %>%
   mutate(type1_ratio = type1 / total * 100) %>%
