@@ -1,4 +1,5 @@
 library(tidyverse)
+library(lubridate)
 
 source('library/event_lists.R')
 source('library/colour_palette.R')
@@ -47,33 +48,33 @@ league_average <- pitch2021 %>%
   group_by(pitch_name) %>%
   summarise(
     tot = n(),
-    ratio = formatC(n() / nrow(pitch2021) * 100, digits = 1, format = 'f'),
-    velo = formatC(mean(release_speed, na.rm = T) * 1.61, digits = 1, format = 'f'),
-    pfx_x = formatC(mean(pfx_x_mirror, na.rm = T) * 30.48, digits = 1, format = 'f'),
-    pfx_z = formatC(mean(pfx_z, na.rm = T) * 30.48, digits = 1, format = 'f'),
-    pv = formatC(-sum(delta_run_exp, na.rm = T), digits = 1, format = 'f'),
-    pvC = formatC(-mean(delta_run_exp, na.rm = T) * 100, digits = 2, format = 'f'),
-    pv_tj = formatC(sum(-delta_run_exp_tj, na.rm = T), digits = 1, format = 'f'),
-    pvC_tj = formatC(mean(-delta_run_exp_tj, na.rm = T) * 100, digits = 2, format = 'f'),
-    spinrate = formatC(mean(release_spin_rate, na.rm = T), digits = 1, format = 'f'),
-    Zone = formatC(sum(zone %in% 1:9)/n() * 100, digits = 1, format = 'f'),
-    SwStr = formatC(sum(description %in% swst) / n() * 100, digits = 1, format = 'f'),
-    CStr = formatC(sum(description %in% calledstr) / n() * 100, digits = 1, format = 'f'),
-    Swing = formatC(sum(description %in% swing) / n() * 100, digits = 1, format = 'f'),
-    Contact = formatC(sum(description %in% contact) / 
-                        sum(description %in% swing, na.rm = T) * 100, digits = 1, format = 'f'),
-    GB = formatC(sum(bb_type == "ground_ball", na.rm = T) / 
-                   sum(bb_type %in% c('ground_ball', 'line_drive', 'fly_ball', 'popup'), na.rm = T) * 100, digits = 1, format = 'f'),
-    LD = formatC(sum(bb_type == "line_drive", na.rm = T) / 
-                   sum(bb_type %in% c('ground_ball', 'line_drive', 'fly_ball', 'popup'), na.rm = T) * 100, digits = 1, format = 'f'),
-    FB = formatC(sum(bb_type == "fly_ball", na.rm = T) / 
-                   sum(bb_type %in% c('ground_ball', 'line_drive', 'fly_ball', 'popup'), na.rm = T) * 100, digits = 1, format = 'f'),
-    PU = formatC(sum(bb_type == "popup", na.rm = T) / 
-                   sum(bb_type %in% c('ground_ball', 'line_drive', 'fly_ball', 'popup'), na.rm = T) * 100, digits = 1, format = 'f'),
-    Hard = formatC(sum(launch_speed >= 95, na.rm = T) /
-                     sum(!is.na(launch_speed), na.rm = T) * 100, digits = 1, format = 'f'),
-    wOBA = formatC(sum(woba_value, na.rm = T) / sum(woba_denom, na.rm = T), digits = 3, format = 'f'),
-    xwOBA = formatC(sum(xwoba_value, na.rm = T) / sum(woba_denom, na.rm = T), digits = 3, format = 'f'),
+    ratio = round(n() / nrow(pitch2021) * 100, digits = 1),
+    velo = round(mean(release_speed, na.rm = T) * 1.61, digits = 1),
+    pfx_x = round(mean(pfx_x_mirror, na.rm = T) * 30.48, digits = 1),
+    pfx_z = round(mean(pfx_z, na.rm = T) * 30.48, digits = 1),
+    pv = round(-sum(delta_run_exp, na.rm = T), digits = 1),
+    pvC = round(-mean(delta_run_exp, na.rm = T) * 100, digits = 2),
+    pv_tj = round(sum(-delta_run_exp_tj, na.rm = T), digits = 1),
+    pvC_tj = round(mean(-delta_run_exp_tj, na.rm = T) * 100, digits = 2),
+    spinrate = round(mean(release_spin_rate, na.rm = T), digits = 1),
+    Zone = round(sum(zone %in% 1:9)/n() * 100, digits = 1),
+    SwStr = round(sum(description %in% swst) / n() * 100, digits = 1),
+    CStr = round(sum(description %in% calledstr) / n() * 100, digits = 1),
+    Swing = round(sum(description %in% swing) / n() * 100, digits = 1),
+    Contact = round(sum(description %in% contact) / 
+                        sum(description %in% swing, na.rm = T) * 100, digits = 1),
+    GB = round(sum(bb_type == "ground_ball", na.rm = T) / 
+                   sum(bb_type %in% c('ground_ball', 'line_drive', 'fly_ball', 'popup'), na.rm = T) * 100, digits = 1),
+    LD = round(sum(bb_type == "line_drive", na.rm = T) / 
+                   sum(bb_type %in% c('ground_ball', 'line_drive', 'fly_ball', 'popup'), na.rm = T) * 100, digits = 1),
+    FB = round(sum(bb_type == "fly_ball", na.rm = T) / 
+                   sum(bb_type %in% c('ground_ball', 'line_drive', 'fly_ball', 'popup'), na.rm = T) * 100, digits = 1),
+    PU = round(sum(bb_type == "popup", na.rm = T) / 
+                   sum(bb_type %in% c('ground_ball', 'line_drive', 'fly_ball', 'popup'), na.rm = T) * 100, digits = 1),
+    Hard = round(sum(launch_speed[type == 'X'] >= 95, na.rm = T) /
+                   sum(type == 'X', na.rm = T) * 100, digits = 1),
+    wOBA = round(sum(woba_value, na.rm = T) / sum(woba_denom, na.rm = T), digits = 3),
+    xwOBA = round(sum(xwoba_value, na.rm = T) / sum(woba_denom, na.rm = T), digits = 3),
   ) %>%
   filter(!(pitch_name %in% c('', 'Fastball', 'Screwball', 'Eephus'))) %>%
   arrange(-tot)
@@ -91,33 +92,33 @@ ohtani %>%
   summarise(
     #name = paste0(first(name_last), ', ', first(name_first)),
     pitches = n(),
-    ratio = formatC(n() / nrow(ohtani) * 100, digits = 1, format = 'f'),
-    velo = formatC(mean(release_speed, na.rm = T) * 1.61, digits = 1, format = 'f'),
-    pfx_x = formatC(mean(pfx_x, na.rm = T) * 30.48, digits = 1, format = 'f'),
-    pfx_z = formatC(mean(pfx_z, na.rm = T) * 30.48, digits = 1, format = 'f'),
-    pv = formatC(-sum(delta_run_exp, na.rm = T), digits = 1, format = 'f'),
-    pvC = formatC(-mean(delta_run_exp, na.rm = T) * 100, digits = 2, format = 'f'),
-    pv_tj = formatC(sum(-delta_run_exp_tj, na.rm = T), digits = 1, format = 'f'),
-    pvC_tj = formatC(mean(-delta_run_exp_tj, na.rm = T) * 100, digits = 2, format = 'f'),
-    spinrate = formatC(mean(release_spin_rate, na.rm = T), digits = 1, format = 'f'),
-    Zone = formatC(sum(zone %in% 1:9)/n() * 100, digits = 1, format = 'f'),
-    SwStr = formatC(sum(description %in% swst) / n() * 100, digits = 1, format = 'f'),
-    CStr = formatC(sum(description %in% calledstr) / n() * 100, digits = 1, format = 'f'),
-    Swing = formatC(sum(description %in% swing) / n() * 100, digits = 1, format = 'f'),
-    Contact = formatC(sum(description %in% contact) / 
-                      sum(description %in% swing, na.rm = T) * 100, digits = 1, format = 'f'),
-    GB = formatC(sum(bb_type == "ground_ball", na.rm = T) / 
-                   sum(bb_type %in% c('ground_ball', 'line_drive', 'fly_ball', 'popup'), na.rm = T) * 100, digits = 1, format = 'f'),
-    LD = formatC(sum(bb_type == "line_drive", na.rm = T) / 
-                   sum(bb_type %in% c('ground_ball', 'line_drive', 'fly_ball', 'popup'), na.rm = T) * 100, digits = 1, format = 'f'),
-    FB = formatC(sum(bb_type == "fly_ball", na.rm = T) / 
-                   sum(bb_type %in% c('ground_ball', 'line_drive', 'fly_ball', 'popup'), na.rm = T) * 100, digits = 1, format = 'f'),
-    PU = formatC(sum(bb_type == "popup", na.rm = T) / 
-                   sum(bb_type %in% c('ground_ball', 'line_drive', 'fly_ball', 'popup'), na.rm = T) * 100, digits = 1, format = 'f'),
-    Hard = formatC(sum(launch_speed >= 95, na.rm = T) /
-                   sum(!is.na(launch_speed), na.rm = T) * 100, digits = 1, format = 'f'),
-    wOBA = formatC(sum(woba_value, na.rm = T) / sum(woba_denom, na.rm = T), digits = 3, format = 'f'),
-    xwOBA = formatC(sum(xwoba_value, na.rm = T) / sum(woba_denom, na.rm = T), digits = 3, format = 'f'),
+    ratio = round(n() / nrow(ohtani) * 100, digits = 1),
+    velo = round(mean(release_speed, na.rm = T) * 1.61, digits = 1),
+    pfx_x = round(mean(pfx_x, na.rm = T) * 30.48, digits = 1),
+    pfx_z = round(mean(pfx_z, na.rm = T) * 30.48, digits = 1),
+    pv = round(-sum(delta_run_exp, na.rm = T), digits = 1),
+    pvC = round(-mean(delta_run_exp, na.rm = T) * 100, digits = 2),
+    pv_tj = round(sum(-delta_run_exp_tj, na.rm = T), digits = 1),
+    pvC_tj = round(mean(-delta_run_exp_tj, na.rm = T) * 100, digits = 2),
+    spinrate = round(mean(release_spin_rate, na.rm = T), digits = 1),
+    Zone = round(sum(zone %in% 1:9)/n() * 100, digits = 1),
+    SwStr = round(sum(description %in% swst) / n() * 100, digits = 1),
+    CStr = round(sum(description %in% calledstr) / n() * 100, digits = 1),
+    Swing = round(sum(description %in% swing) / n() * 100, digits = 1),
+    Contact = round(sum(description %in% contact) / 
+                      sum(description %in% swing, na.rm = T) * 100, digits = 1),
+    GB = round(sum(bb_type == "ground_ball", na.rm = T) / 
+                   sum(bb_type %in% c('ground_ball', 'line_drive', 'fly_ball', 'popup'), na.rm = T) * 100, digits = 1),
+    LD = round(sum(bb_type == "line_drive", na.rm = T) / 
+                   sum(bb_type %in% c('ground_ball', 'line_drive', 'fly_ball', 'popup'), na.rm = T) * 100, digits = 1),
+    FB = round(sum(bb_type == "fly_ball", na.rm = T) / 
+                   sum(bb_type %in% c('ground_ball', 'line_drive', 'fly_ball', 'popup'), na.rm = T) * 100, digits = 1),
+    PU = round(sum(bb_type == "popup", na.rm = T) / 
+                   sum(bb_type %in% c('ground_ball', 'line_drive', 'fly_ball', 'popup'), na.rm = T) * 100, digits = 1),
+    Hard = round(sum(launch_speed[type == 'X'] >= 95, na.rm = T) /
+                   sum(type == 'X', na.rm = T) * 100, digits = 1),
+    wOBA = round(sum(woba_value, na.rm = T) / sum(woba_denom, na.rm = T), digits = 3),
+    xwOBA = round(sum(xwoba_value, na.rm = T) / sum(woba_denom, na.rm = T), digits = 3),
   ) %>%
   #filter(name == 'Ohtani, Shohei') %>%
   arrange(-pitches) -> summary
@@ -161,7 +162,7 @@ ohtani %>%
                    sum(bb_type %in% c('ground_ball', 'line_drive', 'fly_ball', 'popup'), na.rm = T) * 100, digits = 1),
     PU = round(sum(bb_type == "popup", na.rm = T) / 
                    sum(bb_type %in% c('ground_ball', 'line_drive', 'fly_ball', 'popup'), na.rm = T) * 100, digits = 1),
-    Hard = round(sum(launch_speed >= 95, na.rm = T) /
+    Hard = round(sum(launch_speed[type == 'X'] >= 95, na.rm = T) /
                      sum(!is.na(launch_speed), na.rm = T) * 100, digits = 1),
     wOBA = round(sum(woba_value, na.rm = T) / sum(woba_denom, na.rm = T), digits = 3),
     xwOBA = round(sum(xwoba_value, na.rm = T) / sum(woba_denom, na.rm = T), digits = 3),
