@@ -1,3 +1,5 @@
+
+
 pitch2021 %>%
   filter(type == 'S', strikes == 0, balls == 0) %>%
   view()
